@@ -10,6 +10,7 @@
 2. 最值得偷的一招：**`opaque_` 里没有 type id 字段，函数指针的地址就是 type id**。判断「这个错误是不是我这个模块产生的」= 比较 `err.strerror != &opaque_strerror`。
 3. 搬进 UE 时**不要到处用**。UE 有三套现成机制各管一层：`Cast<T>()`（UObject 反射）、`UInterface`（行为多态）、`Opaque + Tag`（非 UObject 的跨模块专属数据）。判据表在 [02](./02-ue-opaque-error.md#1-三种机制的分工判据)。
 4. 这套设计的真正价值是架构性的：**公共模块不会因为多支持一个插件就必须改自己的头文件**。
+5. 函数指针之所以能当「执行者」又当「身份」，是因为它是一个**地址**：地址可被调用（分派），也可被比较（恢复）。**谁填表，谁是执行者**——`db_vtable` 由驱动填（向下派发），`value_vtable` 由调用方填（向上回调），一个接口同时具备两个方向才算完整擦除。展开见 [03](./03-fn-pointer-as-executor.md)。
 
 ## 文件
 
@@ -17,6 +18,7 @@
 |---|---|
 | [01-hare-vtable-and-opaque.md](./01-hare-vtable-and-opaque.md) | Hare 侧机制拆解：vtable、`*opaque`、24 字节存储、函数指针当标签、两层 match |
 | [02-ue-opaque-error.md](./02-ue-opaque-error.md) | UE 侧落地：`FImportError` 完整实现、与 `Cast`/`UInterface`/`FInstancedStruct` 的取舍、四个坑 |
+| [03-fn-pointer-as-executor.md](./03-fn-pointer-as-executor.md) | 函数指针「找执行者」的机制：vtable 双向性（向下派发 / 向上回调）、分派与恢复的判据、地址当身份的四个前提（含链接器 ICF 折叠）、接口契约三条 |
 | [samples/](./samples/) | 可编译验证的最小实现（纯 C++17，已跑通），用来证明「标签比较 + fail-closed 解包」真的成立 |
 
 ## 一句话记住它
